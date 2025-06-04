@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Deep Learning EA2: Regression mit FFNN</title>
+
+    <!-- TensorFlow.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@2.0.0/dist/tf.min.js"></script>
+    <!-- TensorFlow.js Vis (optional, nicht genutzt in aktuellem Code) -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-vis@1.0.2/dist/tfjs-vis.umd.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+        }
+
+        h2 {
+            margin-top: 2em;
+            margin-bottom: 0.5em;
+        }
+
+        .grid {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .chart-column {
+            flex: 1 1 48%;
+        }
+
+        canvas {
+            max-width: 100%;
+            height: auto;
+            background: #f9f9f9;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        #generateBtn {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+<h1>Deep Learning EA2: Regression mit FFNN</h1>
+
+<button id="generateBtn">Neu erzeugen</button>
+
+<h2>R1: Datensätze</h2>
+<div class="grid">
+    <div class="chart-column">
+        <canvas id="chartRawClean"></canvas>
+    </div>
+    <div class="chart-column">
+        <canvas id="chartRawNoisy"></canvas>
+    </div>
+</div>
+
+<h2>R2: Vorhersage y_unverrauscht(x)</h2>
+<div class="grid">
+    <div class="chart-column">
+        <canvas id="chartCleanTrain"></canvas>
+    </div>
+    <div class="chart-column">
+        <canvas id="chartCleanTest"></canvas>
+    </div>
+</div>
+
+<h2>R3: Vorhersage y_best(x)</h2>
+<div class="grid">
+    <div class="chart-column">
+        <canvas id="chartBestTrain"></canvas>
+    </div>
+    <div class="chart-column">
+        <canvas id="chartBestTest"></canvas>
+    </div>
+</div>
+
+<h2>R4: Vorhersage y_overfit(x)</h2>
+<div class="grid">
+    <div class="chart-column">
+        <canvas id="chartOverfitTrain"></canvas>
+    </div>
+    <div class="chart-column">
+        <canvas id="chartOverfitTest"></canvas>
+    </div>
+</div>
+
+<!-- Haupt-Skript -->
+<script src="script.js"></script>
+</body>
+</html>
