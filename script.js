@@ -232,16 +232,17 @@ function renderDataPreview(data, elementId) {
     if (!previewElement) return;
     const combined = [...data.trainNoisy, ...data.testNoisy];
     const preview = combined.slice(0, 10).map((d, i) => `${i + 1}. x: ${d.x.toFixed(3)}, y: ${d.y.toFixed(3)}`).join("\n");
-    previewElement.textContent = null;
+    previewElement.textContent = '';
     previewElement.textContent = preview;
 }
 
 document.getElementById("generateBtn").addEventListener("click", () => {
+    tf.disposeVariables();
     const timestamp = new Date().toLocaleString();
     document.getElementById('dataPreview').textContent = "Neu erzeugt: " + timestamp;
-    tf.disposeVariables();
-    generateData();
+    currentData = generateData();
     renderDataPreview(currentData,'dataPreview');
+    console.log("Beispiel x/y:", currentData.trainNoisy[0]);
 });
 
 document.getElementById("downloadDataset").addEventListener("click", () => {
@@ -258,7 +259,8 @@ document.getElementById("downloadDataset").addEventListener("click", () => {
     a.click();
     URL.revokeObjectURL(url);
 });
-document.getElementById("uploadDataset").addEventListener("change", async (event) => {
+document.getElementById("uploadDataset").addEventListener("click", async (event) => {
+    console.log("Upload Dataset");
     const file = event.target.files[0];
     if (!file) return;
 
