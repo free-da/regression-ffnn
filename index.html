@@ -75,8 +75,17 @@
 
 <h2>R2: Vorhersage y_unverrauscht(x)</h2>
 
-<input type="number" id="unitsInputClean" value="100" min="1" max="500">
-<input type="number" id="epochsInputClean" value="50" min="1" max="1000">
+<div>
+    <label for="unitsInputClean">Units:</label>
+    <input type="number" id="unitsInputClean" value="100" min="1" max="500">
+
+    <label for="epochsInputClean">Epochs:</label>
+    <input type="number" id="epochsInputClean" value="50" min="1" max="1000">
+
+    <button onclick="trainModelClean()">Modell neu trainieren</button>
+    <button onclick="saveModel('clean')">Modell speichern</button>
+</div>
+
 <div class="grid">
     <div class="chart-column">
         <canvas id="chartCleanTrain"></canvas>
@@ -85,13 +94,22 @@
         <canvas id="chartCleanTest"></canvas>
     </div>
 </div>
-<button onclick="model.save('downloads://modell')">Modell speichern</button>
+
 
 
 <h2>R3: Vorhersage y_best(x)</h2>
 
-<input type="number" id="unitsInputNoisy" value="100" min="1" max="500">
-<input type="number" id="epochsInputNoisy" value="50" min="1" max="1000">
+<div>
+    <label for="unitsInputNoisy">Units:</label>
+    <input type="number" id="unitsInputNoisy" value="100" min="1" max="500">
+
+    <label for="epochsInputNoisy">Epochs:</label>
+    <input type="number" id="epochsInputNoisy" value="50" min="1" max="1000">
+
+    <button onclick="trainModelNoisy()">Modell neu trainieren</button>
+    <button onclick="saveModel('noisy')">Modell speichern</button>
+</div>
+
 <div class="grid">
     <div class="chart-column">
         <canvas id="chartBestTrain"></canvas>
@@ -103,8 +121,17 @@
 
 <h2>R4: Vorhersage y_overfit(x)</h2>
 
-<input type="number" id="unitsInputOverfit" value="100" min="1" max="500">
-<input type="number" id="epochsInputOverfit" value="500" min="1" max="1000">
+<div>
+    <label for="unitsInputOverfit">Units:</label>
+    <input type="number" id="unitsInputOverfit" value="100" min="1" max="500">
+
+    <label for="epochsInputOverfit">Epochs:</label>
+    <input type="number" id="epochsInputOverfit" value="500" min="1" max="1000">
+
+    <button onclick="trainModelOverfit()">Modell neu trainieren</button>
+    <button onclick="saveModel('overfit')">Modell speichern</button>
+</div>
+
 <div class="grid">
     <div class="chart-column">
         <canvas id="chartOverfitTrain"></canvas>
@@ -113,6 +140,7 @@
         <canvas id="chartOverfitTest"></canvas>
     </div>
 </div>
+
 
 <!-- Haupt-Skript -->
 <script src="script.js"></script>

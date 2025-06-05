@@ -3,7 +3,9 @@ const NOISE_VAR = 0.05;
 // Globales Chart-Register
 const chartRefs = {};
 let currentData = null;
-
+let modelClean = null;
+let modelNoisy = null;
+let modelOverfit = null;
 
 // Ziel-Funktion (Ground Truth)
 function targetFunction(x) {
@@ -57,7 +59,7 @@ function createModel(numberOfUnits) {
     return model;
 }
 
-async function trainAndPredict(model, trainData, testData, epochs) {
+async function trainAndPredict(model, trainData, testData, epochs, label) {
     const { xs: xsTrain, ys: ysTrain } = prepareTensors(trainData);
     const { xs: xsTest, ys: ysTest } = prepareTensors(testData);
 
@@ -66,7 +68,7 @@ async function trainAndPredict(model, trainData, testData, epochs) {
         batchSize: 32,
         verbose: 0,
         callbacks: tfvis.show.fitCallbacks(
-            { name: 'Training Performance' },
+            { name: label },
             ['loss'],
             { callbacks: ['onEpochEnd'] }
         )
@@ -107,16 +109,16 @@ async function run() {
     const unitsOverfit = parseInt(document.getElementById("unitsInputOverfit").value);
     const epochsOverfit = parseInt(document.getElementById("epochsInputOverfit").value);
     // Clean model
-    const modelClean = createModel(unitsClean);
-    const resultClean = await trainAndPredict(modelClean, data.trainClean, data.testClean, epochsClean);
+    modelClean = createModel(unitsClean);
+    const resultClean = await trainAndPredict(modelClean, data.trainClean, data.testClean, epochsClean, "Unverrauscht");
 
     // Best fit (rauschig, moderate Ep.)
-    const modelBestFit = createModel(unitsNoisy);
-    const resultBest = await trainAndPredict(modelBestFit, data.trainNoisy, data.testNoisy, epochsNoisy);
+    modelNoisy = createModel(unitsNoisy);
+    const resultBest = await trainAndPredict(modelNoisy, data.trainNoisy, data.testNoisy, epochsNoisy, "Mit Rauschen");
 
     // Overfit (rauschig, zu viele Ep.)
-    const modelOverfit = createModel(unitsOverfit);
-    const resultOverfit = await trainAndPredict(modelOverfit, data.trainNoisy, data.testNoisy, epochsOverfit);
+    modelOverfit = createModel(unitsOverfit);
+    const resultOverfit = await trainAndPredict(modelOverfit, data.trainNoisy, data.testNoisy, epochsOverfit, "Overfit");
 
     // Daten und Ergebnisse rendern
     renderAll({
@@ -270,6 +272,59 @@ document.getElementById("uploadDataset").addEventListener("click", () => {
         console.log("Datensatz erfolgreich geladen:", currentData);
     });
 });
+
+function trainModelClean() {
+    const units = parseInt(document.getElementById("unitsInputClean").value);
+    const epochs = parseInt(document.getElementById("epochsInputClean").value);
+    modelClean = createModel(units);
+    trainAndPredict(modelClean, currentData.trainClean, currentData.testClean, epochs, "Unverrauscht");
+    renderScatterChart("chartCleanTrain", [
+        { label: 'Train Clean', data: data.trainClean, backgroundColor: 'blue' },
+        { label: 'Prediction', data: resultClean.predictions, borderColor: 'black', type: 'line', fill: false }
+    ], `R2 Train | Loss: ${resultClean.trainLoss.toFixed(4)}`);
+    renderScatterChart("chartBestTest", [
+        { label: 'Test Noisy', data: data.testNoisy, backgroundColor: 'orange' },
+        { label: 'Prediction', data: resultBest.predictions, borderColor: 'green', type: 'line', fill: false }
+    ], `R3 Test | Loss: ${resultBest.testLoss.toFixed(4)}`);
+}
+
+function trainModelNoisy() {
+    const units = parseInt(document.getElementById("unitsInputNoisy").value);
+    const epochs = parseInt(document.getElementById("epochsInputNoisy").value);
+    modelNoisy = createModel(units);
+    trainAndPredict(modelNoisy, currentData.trainNoisy, currentData.testNoisy, epochs, "Mit Rauschen");
+    renderScatterChart("chartBestTrain", [
+        { label: 'Train Noisy', data: data.trainNoisy, backgroundColor: 'red' },
+        { label: 'Prediction', data: resultBest.predictions, borderColor: 'green', type: 'line', fill: false }
+    ], `R3 Train | Loss: ${resultBest.trainLoss.toFixed(4)}`);
+
+    renderScatterChart("chartBestTest", [
+        { label: 'Test Noisy', data: data.testNoisy, backgroundColor: 'orange' },
+        { label: 'Prediction', data: resultBest.predictions, borderColor: 'green', type: 'line', fill: false }
+    ], `R3 Test | Loss: ${resultBest.testLoss.toFixed(4)}`);
+}
+
+function trainModelOverfit() {
+    const units = parseInt(document.getElementById("unitsInputOverfit").value);
+    const epochs = parseInt(document.getElementById("epochsInputOverfit").value);
+    modelOverfit = createModel(units);
+    trainAndPredict(modelOverfit, currentData.trainNoisy, currentData.testNoisy, epochs, "Overfit");
+
+    // R4 - Overfit Model
+    renderScatterChart("chartOverfitTrain", [
+        { label: 'Train Noisy', data: data.trainNoisy, backgroundColor: 'red' },
+        { label: 'Prediction', data: resultOverfit.predictions, borderColor: 'purple', type: 'line', fill: false }
+    ], `R4 Train | Loss: ${resultOverfit.trainLoss.toFixed(4)}`);
+
+    renderScatterChart("chartOverfitTest", [
+        { label: 'Test Noisy', data: data.testNoisy, backgroundColor: 'orange' },
+        { label: 'Prediction', data: resultOverfit.predictions, borderColor: 'purple', type: 'line', fill: false }
+    ], `R4 Test | Loss: ${resultOverfit.testLoss.toFixed(4)}`);
+}
+
+function saveModel(name) {
+    model.save(`downloads://model_${name}`);
+}
 
 document.getElementById("runAll").addEventListener("click",run);
 //run(); // Initialer Lauf
