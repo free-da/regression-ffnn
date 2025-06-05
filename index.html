@@ -40,7 +40,7 @@
             border-radius: 4px;
         }
 
-        #generateBtn {
+        button {
             padding: 10px 20px;
             font-size: 16px;
             margin-bottom: 20px;
@@ -48,9 +48,15 @@
     </style>
 </head>
 <body>
+
 <h1>Deep Learning EA2: Regression mit FFNN</h1>
 
-<button id="generateBtn">Neu erzeugen</button>
+<button id="generateBtn">Datensatz neu erzeugen</button>
+<button id="downloadDataset">Datensatz speichern</button>
+<button id="uploadDataset">Datensatz laden</button>
+<pre id="dataPreview" style="background:#f4f4f4; padding: 1em;">
+</pre>
+
 
 <h2>R1: Datensätze</h2>
 <div class="grid">
@@ -63,6 +69,9 @@
 </div>
 
 <h2>R2: Vorhersage y_unverrauscht(x)</h2>
+
+<input type="number" id="unitsInputClean" value="100" min="1" max="500">
+<input type="number" id="epochsInputClean" value="50" min="1" max="1000">
 <div class="grid">
     <div class="chart-column">
         <canvas id="chartCleanTrain"></canvas>
@@ -71,8 +80,13 @@
         <canvas id="chartCleanTest"></canvas>
     </div>
 </div>
+<button onclick="model.save('downloads://modell')">Modell speichern</button>
+
 
 <h2>R3: Vorhersage y_best(x)</h2>
+
+<input type="number" id="unitsInputNoisy" value="100" min="1" max="500">
+<input type="number" id="epochsInputNoisy" value="50" min="1" max="1000">
 <div class="grid">
     <div class="chart-column">
         <canvas id="chartBestTrain"></canvas>
@@ -83,6 +97,9 @@
 </div>
 
 <h2>R4: Vorhersage y_overfit(x)</h2>
+
+<input type="number" id="unitsInputOverfit" value="100" min="1" max="500">
+<input type="number" id="epochsInputOverfit" value="500" min="1" max="1000">
 <div class="grid">
     <div class="chart-column">
         <canvas id="chartOverfitTrain"></canvas>

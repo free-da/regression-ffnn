@@ -2,6 +2,8 @@ const N = 100;
 const NOISE_VAR = 0.05;
 // Globales Chart-Register
 const chartRefs = {};
+let currentData = null;
+
 
 // Ziel-Funktion (Ground Truth)
 function targetFunction(x) {
@@ -43,10 +45,10 @@ function prepareTensors(data) {
     return { xs, ys };
 }
 
-function createModel() {
+function createModel(numberOfUnits) {
     const model = tf.sequential();
-    model.add(tf.layers.dense({ units: 100, activation: 'relu', inputShape: [1] }));
-    model.add(tf.layers.dense({ units: 100, activation: 'relu' }));
+    model.add(tf.layers.dense({ units: numberOfUnits, activation: 'relu', inputShape: [1] }));
+    model.add(tf.layers.dense({ units: numberOfUnits, activation: 'relu' }));
     model.add(tf.layers.dense({ units: 1 })); // Linear output
     model.compile({
         optimizer: tf.train.adam(0.01),
@@ -62,7 +64,12 @@ async function trainAndPredict(model, trainData, testData, epochs) {
     await model.fit(xsTrain, ysTrain, {
         epochs: epochs,
         batchSize: 32,
-        verbose: 0
+        verbose: 0,
+        callbacks: tfvis.show.fitCallbacks(
+            { name: 'Training Performance' },
+            ['loss'],
+            { callbacks: ['onEpochEnd'] }
+        )
     });
 
     const trainLoss = model.evaluate(xsTrain, ysTrain).dataSync()[0];
@@ -86,18 +93,25 @@ async function trainAndPredict(model, trainData, testData, epochs) {
 // Hauptfunktion
 async function run() {
     const data = generateData();
-
+    currentData = data;
+    renderDataPreview(currentData,'dataPreview');
+    const unitsClean = parseInt(document.getElementById("unitsInputClean").value);
+    const epochsClean = parseInt(document.getElementById("epochsInputClean").value);
+    const unitsNoisy = parseInt(document.getElementById("unitsInputNoisy").value);
+    const epochsNoisy = parseInt(document.getElementById("epochsInputNoisy").value);
+    const unitsOverfit = parseInt(document.getElementById("unitsInputOverfit").value);
+    const epochsOverfit = parseInt(document.getElementById("epochsInputOverfit").value);
     // Clean model
-    const modelClean = createModel();
-    const resultClean = await trainAndPredict(modelClean, data.trainClean, data.testClean, 100);
+    const modelClean = createModel(unitsClean);
+    const resultClean = await trainAndPredict(modelClean, data.trainClean, data.testClean, epochsClean);
 
     // Best fit (rauschig, moderate Ep.)
-    const modelBestFit = createModel();
-    const resultBest = await trainAndPredict(modelBestFit, data.trainNoisy, data.testNoisy, 100);
+    const modelBestFit = createModel(unitsNoisy);
+    const resultBest = await trainAndPredict(modelBestFit, data.trainNoisy, data.testNoisy, epochsNoisy);
 
     // Overfit (rauschig, zu viele Ep.)
-    const modelOverfit = createModel();
-    const resultOverfit = await trainAndPredict(modelOverfit, data.trainNoisy, data.testNoisy, 500);
+    const modelOverfit = createModel(unitsOverfit);
+    const resultOverfit = await trainAndPredict(modelOverfit, data.trainNoisy, data.testNoisy, epochsOverfit);
 
     // Daten und Ergebnisse rendern
     renderAll({
@@ -192,9 +206,69 @@ function renderAll({ data, resultClean, resultBest, resultOverfit }) {
     ], `R4 Test | Loss: ${resultOverfit.testLoss.toFixed(4)}`);
 }
 
+
+function uploadDataset(callback) {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "application/json";
+    input.onchange = (e) => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = () => {
+            const json = JSON.parse(reader.result);
+            callback(json);
+        };
+        reader.readAsText(file);
+    };
+    input.click();
+}
+
+async function loadModelFromDisk() {
+    const model = await tf.loadLayersModel('uploads://mein_model');
+    return model;
+}
+function renderDataPreview(data, elementId) {
+    const previewElement = document.getElementById(elementId);
+    if (!previewElement) return;
+    const combined = [...data.trainNoisy, ...data.testNoisy];
+    const preview = combined.slice(0, 10).map((d, i) => `${i + 1}. x: ${d.x.toFixed(3)}, y: ${d.y.toFixed(3)}`).join("\n");
+    previewElement.textContent = null;
+    previewElement.textContent = preview;
+}
+
 document.getElementById("generateBtn").addEventListener("click", () => {
+    const timestamp = new Date().toLocaleString();
+    document.getElementById('dataPreview').textContent = "Neu erzeugt: " + timestamp;
     tf.disposeVariables();
-    run();
+    generateData();
+    renderDataPreview(currentData,'dataPreview');
 });
+
+document.getElementById("downloadDataset").addEventListener("click", () => {
+    if (!currentData) {
+        alert("Bitte zuerst einen Datensatz generieren.");
+        return;
+    }
+    const blob = new Blob([JSON.stringify(currentData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    a.download = `dataset-${timestamp}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+});
+document.getElementById("uploadDataset").addEventListener("change", async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const text = await file.text();
+    const rawData = JSON.parse(text); // Annahme: JSON-Datei mit .trainNoisy/.testNoisy etc.
+
+    currentData = rawData; // global speichern
+    renderDataPreview(rawData, 'dataPreview');
+    //runWithData(rawData); // neue Funktion zum Trainieren auf Upload-Daten
+});
+
 
 run(); // Initialer Lauf
