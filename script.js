@@ -92,8 +92,13 @@ async function trainAndPredict(model, trainData, testData, epochs) {
 
 // Hauptfunktion
 async function run() {
-    const data = generateData();
-    currentData = data;
+    let data = null;
+    if (currentData) {
+        data = currentData;
+    } else {
+        alert("Bitte erst Daten erzeugen!");
+        return;
+    }
     renderDataPreview(currentData,'dataPreview');
     const unitsClean = parseInt(document.getElementById("unitsInputClean").value);
     const epochsClean = parseInt(document.getElementById("epochsInputClean").value);
@@ -206,23 +211,6 @@ function renderAll({ data, resultClean, resultBest, resultOverfit }) {
     ], `R4 Test | Loss: ${resultOverfit.testLoss.toFixed(4)}`);
 }
 
-
-function uploadDataset(callback) {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "application/json";
-    input.onchange = (e) => {
-        const file = e.target.files[0];
-        const reader = new FileReader();
-        reader.onload = () => {
-            const json = JSON.parse(reader.result);
-            callback(json);
-        };
-        reader.readAsText(file);
-    };
-    input.click();
-}
-
 async function loadModelFromDisk() {
     const model = await tf.loadLayersModel('uploads://mein_model');
     return model;
@@ -259,18 +247,29 @@ document.getElementById("downloadDataset").addEventListener("click", () => {
     a.click();
     URL.revokeObjectURL(url);
 });
-document.getElementById("uploadDataset").addEventListener("click", async (event) => {
-    console.log("Upload Dataset");
-    const file = event.target.files[0];
-    if (!file) return;
+function uploadDataset(callback) {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "application/json";
+    input.onchange = (e) => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = () => {
+            const json = JSON.parse(reader.result);
+            callback(json);
+        };
+        reader.readAsText(file);
+    };
+    input.click();
+}
 
-    const text = await file.text();
-    const rawData = JSON.parse(text); // Annahme: JSON-Datei mit .trainNoisy/.testNoisy etc.
-
-    currentData = rawData; // global speichern
-    renderDataPreview(rawData, 'dataPreview');
-    //runWithData(rawData); // neue Funktion zum Trainieren auf Upload-Daten
+document.getElementById("uploadDataset").addEventListener("click", () => {
+    uploadDataset((json) => {
+        currentData = json;
+        renderDataPreview(currentData, 'dataPreview');
+        console.log("Datensatz erfolgreich geladen:", currentData);
+    });
 });
 
-
-run(); // Initialer Lauf
+document.getElementById("runAll").addEventListener("click",run);
+//run(); // Initialer Lauf
