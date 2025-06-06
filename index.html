@@ -29,10 +29,8 @@
             margin-bottom: 0;
             margin-top: 25px;
         }
-
-        #runAll {
-            background: green;
-            color: white;
+        h2 {
+            margin-top: 50px;
         }
     </style>
 </head>
@@ -148,12 +146,14 @@
         Beim verrauschten Datensatz zeigt sich, dass Modelle mit zu vielen Epochen auch Rauschen lernen,
         was die Generalisierbarkeit verschlechtert. Eine moderate Anzahl an Epochen (150) mit 100 Neuronen
         führt zu stabileren Ergebnissen.
-
+    </p>
+    <p>
         Ich habe gelernt, dass eine zu hohe Modellkapazität bei kleinen Datensätzen problematisch ist
         und der visuelle Vergleich von Trainings- und Testkurven wichtige Hinweise liefert.
         Außerdem zeigte sich, dass der Einfluss von Zufall (Initialisierung, Batch-Reihenfolge)
         nicht vernachlässigt werden darf.
-
+    </p>
+    <p>
         Die Verwendung von Chart.js und tfjs-vis half dabei, die Trainingsdynamik anschaulich zu beobachten.
     </p>
 </div>
