@@ -4,32 +4,17 @@
     <meta charset="UTF-8">
     <title>Deep Learning EA2: Regression mit FFNN</title>
 
+    <!-- Foundation CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/foundation-sites@6.7.5/dist/css/foundation.min.css">
+
     <!-- TensorFlow.js -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@2.0.0/dist/tf.min.js"></script>
-    <!-- TensorFlow.js Vis (optional, nicht genutzt in aktuellem Code) -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-vis@1.0.2/dist/tfjs-vis.umd.min.js"></script>
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         body {
-            font-family: sans-serif;
             margin: 20px;
-        }
-
-        h2 {
-            margin-top: 2em;
-            margin-bottom: 0.5em;
-        }
-
-        .grid {
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-
-        .chart-column {
-            flex: 1 1 48%;
         }
 
         canvas {
@@ -40,109 +25,131 @@
             border-radius: 4px;
         }
 
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            margin-bottom: 20px;
+        .button-group .button {
+            margin-bottom: 0;
+            margin-top: 25px;
         }
+
         #runAll {
-            background:green;
+            background: green;
+            color: white;
         }
     </style>
 </head>
 <body>
+<div class="grid-container">
+    <h1>Deep Learning EA2: Regression mit FFNN</h1>
 
-<h1>Deep Learning EA2: Regression mit FFNN</h1>
-
-<button id="generateBtn">Datensatz neu erzeugen</button>
-<button id="downloadDataset">Datensatz speichern</button>
-<button id="uploadDataset">Datensatz laden</button>
-<button id="runAll">ALLE TRAINIEREN</button>
-<h4>Datensatz Vorschau</h4>
-<pre id="dataPreview" style="background:#f4f4f4; padding: 1em;">
-</pre>
-
-
-<h2>R1: Datensätze</h2>
-<div class="grid">
-    <div class="chart-column">
-        <canvas id="chartRawClean"></canvas>
+    <div class="button-group">
+        <button id="generateBtn" class="button primary">Datensatz neu erzeugen</button>
+        <button id="downloadDataset" class="button secondary">Datensatz speichern</button>
+        <button id="uploadDataset" class="button secondary">Datensatz laden</button>
+        <button id="runAll" class="button">ALLE TRAINIEREN</button>
     </div>
-    <div class="chart-column">
-        <canvas id="chartRawNoisy"></canvas>
+
+    <h4>Datensatz Vorschau</h4>
+    <pre id="dataPreview" class="callout"> </pre>
+
+    <h2>R1: Datensätze</h2>
+    <div class="grid-x grid-margin-x">
+        <div class="cell medium-6">
+            <canvas id="chartRawClean"></canvas>
+        </div>
+        <div class="cell medium-6">
+            <canvas id="chartRawNoisy"></canvas>
+        </div>
+    </div>
+
+    <h2>R2: Vorhersage y_unverrauscht(x)</h2>
+    <div class="grid-x grid-padding-x align-middle">
+        <div class="cell small-12 medium-3">
+            <label>Units:
+                <input type="number" id="unitsInputClean" value="100" min="1" max="500">
+            </label>
+        </div>
+        <div class="cell small-12 medium-3">
+            <label>Epochs:
+                <input type="number" id="epochsInputClean" value="150" min="1" max="1000">
+            </label>
+        </div>
+        <div class="cell small-12 medium-6 button-group">
+            <button onclick="trainModelClean()" class="button primary">Modell neu trainieren</button>
+            <button onclick="saveModel('clean')" class="button secondary">Modell speichern</button>
+        </div>
+    </div>
+    <div class="grid-x grid-margin-x">
+        <div class="cell medium-6">
+            <canvas id="chartCleanTrain"></canvas>
+        </div>
+        <div class="cell medium-6">
+            <canvas id="chartCleanTest"></canvas>
+        </div>
+    </div>
+
+    <h2>R3: Vorhersage y_best(x)</h2>
+    <div class="grid-x grid-padding-x align-middle">
+        <div class="cell small-12 medium-3">
+            <label>Units:
+                <input type="number" id="unitsInputNoisy" value="100" min="1" max="500">
+            </label>
+        </div>
+        <div class="cell small-12 medium-3">
+            <label>Epochs:
+                <input type="number" id="epochsInputNoisy" value="150" min="1" max="1000">
+            </label>
+        </div>
+        <div class="cell small-12 medium-6 button-group">
+            <button onclick="trainModelNoisy()" class="button primary">Modell neu trainieren</button>
+            <button onclick="saveModel('noisy')" class="button secondary">Modell speichern</button>
+        </div>
+    </div>
+    <div class="grid-x grid-margin-x">
+        <div class="cell medium-6">
+            <canvas id="chartBestTrain"></canvas>
+        </div>
+        <div class="cell medium-6">
+            <canvas id="chartBestTest"></canvas>
+        </div>
+    </div>
+
+    <h2>R4: Vorhersage y_overfit(x)</h2>
+    <div class="grid-x grid-padding-x align-middle">
+        <div class="cell small-12 medium-3">
+            <label>Units:
+                <input type="number" id="unitsInputOverfit" value="150" min="1" max="500">
+            </label>
+        </div>
+        <div class="cell small-12 medium-3">
+            <label>Epochs:
+                <input type="number" id="epochsInputOverfit" value="500" min="1" max="1000">
+            </label>
+        </div>
+        <div class="cell small-12 medium-6 button-group">
+            <button onclick="trainModelOverfit()" class="button primary">Modell neu trainieren</button>
+            <button onclick="saveModel('overfit')" class="button secondary">Modell speichern</button>
+        </div>
+    </div>
+    <div class="grid-x grid-margin-x">
+        <div class="cell medium-6">
+            <canvas id="chartOverfitTrain"></canvas>
+        </div>
+        <div class="cell medium-6">
+            <canvas id="chartOverfitTest"></canvas>
+        </div>
+    </div>
+    <div class="row column">
+        <hr>
+        <ul class="menu"><li class="float-right">© F. Buchner 2025</li></ul>
     </div>
 </div>
 
-<h2>R2: Vorhersage y_unverrauscht(x)</h2>
+<!-- Foundation JS -->
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/foundation-sites@6.7.5/dist/js/foundation.min.js"></script>
+<script>
+    $(document).foundation();
+</script>
 
-<div>
-    <label for="unitsInputClean">Units:</label>
-    <input type="number" id="unitsInputClean" value="100" min="1" max="500">
-
-    <label for="epochsInputClean">Epochs:</label>
-    <input type="number" id="epochsInputClean" value="150" min="1" max="1000">
-
-    <button onclick="trainModelClean()">Modell neu trainieren</button>
-    <button onclick="saveModel('clean')">Modell speichern</button>
-</div>
-
-<div class="grid">
-    <div class="chart-column">
-        <canvas id="chartCleanTrain"></canvas>
-    </div>
-    <div class="chart-column">
-        <canvas id="chartCleanTest"></canvas>
-    </div>
-</div>
-
-
-
-<h2>R3: Vorhersage y_best(x)</h2>
-
-<div>
-    <label for="unitsInputNoisy">Units:</label>
-    <input type="number" id="unitsInputNoisy" value="100" min="1" max="500">
-
-    <label for="epochsInputNoisy">Epochs:</label>
-    <input type="number" id="epochsInputNoisy" value="150" min="1" max="1000">
-
-    <button onclick="trainModelNoisy()">Modell neu trainieren</button>
-    <button onclick="saveModel('noisy')">Modell speichern</button>
-</div>
-
-<div class="grid">
-    <div class="chart-column">
-        <canvas id="chartBestTrain"></canvas>
-    </div>
-    <div class="chart-column">
-        <canvas id="chartBestTest"></canvas>
-    </div>
-</div>
-
-<h2>R4: Vorhersage y_overfit(x)</h2>
-
-<div>
-    <label for="unitsInputOverfit">Units:</label>
-    <input type="number" id="unitsInputOverfit" value="150" min="1" max="500">
-
-    <label for="epochsInputOverfit">Epochs:</label>
-    <input type="number" id="epochsInputOverfit" value="500" min="1" max="1000">
-
-    <button onclick="trainModelOverfit()">Modell neu trainieren</button>
-    <button onclick="saveModel('overfit')">Modell speichern</button>
-</div>
-
-<div class="grid">
-    <div class="chart-column">
-        <canvas id="chartOverfitTrain"></canvas>
-    </div>
-    <div class="chart-column">
-        <canvas id="chartOverfitTest"></canvas>
-    </div>
-</div>
-
-
-<!-- Haupt-Skript -->
 <script src="script.js"></script>
 </body>
 </html>
