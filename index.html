@@ -73,8 +73,8 @@
             </label>
         </div>
         <div class="cell small-12 medium-6 button-group">
-            <button onclick="trainModelClean()" class="button primary">Modell neu trainieren</button>
-            <button onclick="saveModel('clean')" class="button secondary">Modell speichern</button>
+            <button onclick="createAndTrainModelClean()" class="button primary">Modell neu trainieren</button>
+<!--            <button onclick="saveModel('clean')" class="button secondary">Modell speichern</button>-->
         </div>
     </div>
     <div class="grid-x grid-margin-x">
@@ -99,8 +99,8 @@
             </label>
         </div>
         <div class="cell small-12 medium-6 button-group">
-            <button onclick="trainModelNoisy()" class="button primary">Modell neu trainieren</button>
-            <button onclick="saveModel('noisy')" class="button secondary">Modell speichern</button>
+            <button onclick="createAndTrainModelNoisy()" class="button primary">Modell neu trainieren</button>
+<!--            <button onclick="saveModel('noisy')" class="button secondary">Modell speichern</button>-->
         </div>
     </div>
     <div class="grid-x grid-margin-x">
@@ -116,7 +116,7 @@
     <div class="grid-x grid-padding-x align-middle">
         <div class="cell small-12 medium-3">
             <label>Units:
-                <input type="number" id="unitsInputOverfit" value="150" min="1" max="500">
+                <input type="number" id="unitsInputOverfit" value="500" min="1" max="500">
             </label>
         </div>
         <div class="cell small-12 medium-3">
@@ -125,8 +125,8 @@
             </label>
         </div>
         <div class="cell small-12 medium-6 button-group">
-            <button onclick="trainModelOverfit()" class="button primary">Modell neu trainieren</button>
-            <button onclick="saveModel('overfit')" class="button secondary">Modell speichern</button>
+            <button onclick="createAndTrainModelOverfit()" class="button primary">Modell neu trainieren</button>
+<!--            <button onclick="saveModel('overfit')" class="button secondary">Modell speichern</button>-->
         </div>
     </div>
     <div class="grid-x grid-margin-x">

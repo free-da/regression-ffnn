@@ -101,32 +101,16 @@ async function run() {
         alert("Bitte erst Daten erzeugen!");
         return;
     }
-    renderDataPreview(currentData,'dataPreview');
-    const unitsClean = parseInt(document.getElementById("unitsInputClean").value);
-    const epochsClean = parseInt(document.getElementById("epochsInputClean").value);
-    const unitsNoisy = parseInt(document.getElementById("unitsInputNoisy").value);
-    const epochsNoisy = parseInt(document.getElementById("epochsInputNoisy").value);
-    const unitsOverfit = parseInt(document.getElementById("unitsInputOverfit").value);
-    const epochsOverfit = parseInt(document.getElementById("epochsInputOverfit").value);
+    renderDataPreviewAndScatterChart(currentData,'dataPreview');
     // Clean model
-    modelClean = createModel(unitsClean);
-    const resultClean = await trainAndPredict(modelClean, data.trainClean, data.testClean, epochsClean, "Unverrauscht");
-
+    const resultClean = await createAndTrainModelClean();
+    renderModelClean(resultClean);
     // Best fit (rauschig, moderate Ep.)
-    modelNoisy = createModel(unitsNoisy);
-    const resultBest = await trainAndPredict(modelNoisy, data.trainNoisy, data.testNoisy, epochsNoisy, "Mit Rauschen");
-
+    const resultNoisy = await createAndTrainModelNoisy()
+    renderModelNoisy(resultNoisy);
     // Overfit (rauschig, zu viele Ep.)
-    modelOverfit = createModel(unitsOverfit);
-    const resultOverfit = await trainAndPredict(modelOverfit, data.trainNoisy, data.testNoisy, epochsOverfit, "Overfit");
-
-    // Daten und Ergebnisse rendern
-    renderAll({
-        data,
-        resultClean,
-        resultBest,
-        resultOverfit
-    });
+    const resultOverfit = await createAndTrainModelOverfit()
+    renderModelOverfit(resultOverfit);
 }
 
 // Chart-Rendering (Chart.js)
@@ -150,90 +134,17 @@ function renderScatterChart(canvasId, datasets, title) {
     });
 }
 
-// Visualisierung aller Schritte
-function renderAll({ data, resultClean, resultBest, resultOverfit }) {
-    // R1 - Datensätze
-    renderScatterChart("chartRawClean", [
-        {
-            label: 'Train Clean',
-            data: data.trainClean,
-            backgroundColor: 'blue'
-        },
-        {
-            label: 'Test Clean',
-            data: data.testClean,
-            backgroundColor: 'lightblue'
-        }
-    ], 'R1: Ohne Rauschen');
-
-    renderScatterChart("chartRawNoisy", [
-        {
-            label: 'Train Noisy',
-            data: data.trainNoisy,
-            backgroundColor: 'red'
-        },
-        {
-            label: 'Test Noisy',
-            data: data.testNoisy,
-            backgroundColor: 'orange'
-        }
-    ], 'R1: Mit Rauschen');
-
-    // R2 - Clean Model Predictions
-    renderScatterChart("chartCleanTrain", [
-        { label: 'Train Clean', data: data.trainClean, backgroundColor: 'blue' },
-        { label: 'Prediction', data: resultClean.predictions, borderColor: 'black', type: 'line', fill: false }
-    ], `R2 Train | Loss: ${resultClean.trainLoss.toFixed(4)}`);
-
-    renderScatterChart("chartCleanTest", [
-        { label: 'Test Clean', data: data.testClean, backgroundColor: 'lightblue' },
-        { label: 'Prediction', data: resultClean.predictions, borderColor: 'black', type: 'line', fill: false }
-    ], `R2 Test | Loss: ${resultClean.testLoss.toFixed(4)}`);
-
-    // R3 - Best-Fit Model
-    renderScatterChart("chartBestTrain", [
-        { label: 'Train Noisy', data: data.trainNoisy, backgroundColor: 'red' },
-        { label: 'Prediction', data: resultBest.predictions, borderColor: 'green', type: 'line', fill: false }
-    ], `R3 Train | Loss: ${resultBest.trainLoss.toFixed(4)}`);
-
-    renderScatterChart("chartBestTest", [
-        { label: 'Test Noisy', data: data.testNoisy, backgroundColor: 'orange' },
-        { label: 'Prediction', data: resultBest.predictions, borderColor: 'green', type: 'line', fill: false }
-    ], `R3 Test | Loss: ${resultBest.testLoss.toFixed(4)}`);
-
-    // R4 - Overfit Model
-    renderScatterChart("chartOverfitTrain", [
-        { label: 'Train Noisy', data: data.trainNoisy, backgroundColor: 'red' },
-        { label: 'Prediction', data: resultOverfit.predictions, borderColor: 'purple', type: 'line', fill: false }
-    ], `R4 Train | Loss: ${resultOverfit.trainLoss.toFixed(4)}`);
-
-    renderScatterChart("chartOverfitTest", [
-        { label: 'Test Noisy', data: data.testNoisy, backgroundColor: 'orange' },
-        { label: 'Prediction', data: resultOverfit.predictions, borderColor: 'purple', type: 'line', fill: false }
-    ], `R4 Test | Loss: ${resultOverfit.testLoss.toFixed(4)}`);
-}
-
 async function loadModelFromDisk() {
     const model = await tf.loadLayersModel('uploads://mein_model');
     return model;
 }
-function renderDataPreview(data, elementId) {
+function renderDataPreviewAndScatterChart(data, elementId) {
     const previewElement = document.getElementById(elementId);
     if (!previewElement) return;
     const combined = [...data.trainNoisy, ...data.testNoisy];
     const preview = combined.slice(0, 10).map((d, i) => `${i + 1}. x: ${d.x.toFixed(3)}, y: ${d.y.toFixed(3)}`).join("\n");
     previewElement.textContent = '';
     previewElement.textContent = preview;
-}
-
-document.getElementById("generateBtn").addEventListener("click", () => {
-    tf.disposeVariables();
-    const timestamp = new Date().toLocaleString();
-    document.getElementById('dataPreview').textContent = "Neu erzeugt: " + timestamp;
-    currentData = generateData();
-    renderDataPreview(currentData,'dataPreview');
-    console.log("Beispiel x/y:", currentData.trainNoisy[0]);
-    // R1 - Datensätze
     renderScatterChart("chartRawClean", [
         {
             label: 'Train Clean',
@@ -259,6 +170,14 @@ document.getElementById("generateBtn").addEventListener("click", () => {
             backgroundColor: 'orange'
         }
     ], 'R1: Mit Rauschen');
+}
+
+document.getElementById("generateBtn").addEventListener("click", () => {
+    tf.disposeVariables();
+    const timestamp = new Date().toLocaleString();
+    document.getElementById('dataPreview').textContent = "Neu erzeugt: " + timestamp;
+    currentData = generateData();
+    renderDataPreviewAndScatterChart(currentData,'dataPreview');
 });
 
 document.getElementById("downloadDataset").addEventListener("click", () => {
@@ -294,58 +213,70 @@ function uploadDataset(callback) {
 document.getElementById("uploadDataset").addEventListener("click", () => {
     uploadDataset((json) => {
         currentData = json;
-        renderDataPreview(currentData, 'dataPreview');
+        renderDataPreviewAndScatterChart(currentData, 'dataPreview');
         console.log("Datensatz erfolgreich geladen:", currentData);
     });
 });
 
-async function trainModelClean() {
+function renderModelClean(resultClean) {
+    renderScatterChart("chartCleanTrain", [
+        {label: 'Train Clean', data: currentData.trainClean, backgroundColor: 'blue'},
+        {label: 'Prediction', data: resultClean.predictions, borderColor: 'black', type: 'line', fill: false}
+    ], `R2 Train | Loss: ${resultClean.trainLoss.toFixed(4)}`);
+    renderScatterChart("chartCleanTest", [
+        {label: 'Test Noisy', data: currentData.testNoisy, backgroundColor: 'orange'},
+        {label: 'Prediction', data: resultClean.predictions, borderColor: 'green', type: 'line', fill: false}
+    ], `R3 Test | Loss: ${resultClean.testLoss.toFixed(4)}`);
+}
+
+async function createAndTrainModelClean() {
     const units = parseInt(document.getElementById("unitsInputClean").value);
     const epochs = parseInt(document.getElementById("epochsInputClean").value);
     modelClean = createModel(units);
     let resultClean = await trainAndPredict(modelClean, currentData.trainClean, currentData.testClean, epochs, "Unverrauscht");
-    renderScatterChart("chartCleanTrain", [
-        { label: 'Train Clean', data: currentData.trainClean, backgroundColor: 'blue' },
-        { label: 'Prediction', data: resultClean.predictions, borderColor: 'black', type: 'line', fill: false }
-    ], `R2 Train | Loss: ${resultClean.trainLoss.toFixed(4)}`);
-    renderScatterChart("chartCleanTest", [
-        { label: 'Test Noisy', data: currentData.testNoisy, backgroundColor: 'orange' },
-        { label: 'Prediction', data: resultClean.predictions, borderColor: 'green', type: 'line', fill: false }
-    ], `R3 Test | Loss: ${resultClean.testLoss.toFixed(4)}`);
+    // renderModelClean(resultClean);
+    return resultClean;
 }
 
-async function trainModelNoisy() {
+function renderModelNoisy(resultNoisy) {
+    renderScatterChart("chartBestTrain", [
+        {label: 'Train Noisy', data: currentData.trainNoisy, backgroundColor: 'red'},
+        {label: 'Prediction', data: resultNoisy.predictions, borderColor: 'green', type: 'line', fill: false}
+    ], `R3 Train | Loss: ${resultNoisy.trainLoss.toFixed(4)}`);
+
+    renderScatterChart("chartBestTest", [
+        {label: 'Test Noisy', data: currentData.testNoisy, backgroundColor: 'orange'},
+        {label: 'Prediction', data: resultNoisy.predictions, borderColor: 'green', type: 'line', fill: false}
+    ], `R3 Test | Loss: ${resultNoisy.testLoss.toFixed(4)}`);
+}
+
+async function createAndTrainModelNoisy() {
     const units = parseInt(document.getElementById("unitsInputNoisy").value);
     const epochs = parseInt(document.getElementById("epochsInputNoisy").value);
     modelNoisy = createModel(units);
     let resultNoisy = await trainAndPredict(modelNoisy, currentData.trainNoisy, currentData.testNoisy, epochs, "Mit Rauschen");
-    renderScatterChart("chartBestTrain", [
-        { label: 'Train Noisy', data: currentData.trainNoisy, backgroundColor: 'red' },
-        { label: 'Prediction', data: resultNoisy.predictions, borderColor: 'green', type: 'line', fill: false }
-    ], `R3 Train | Loss: ${resultNoisy.trainLoss.toFixed(4)}`);
-
-    renderScatterChart("chartBestTest", [
-        { label: 'Test Noisy', data: currentData.testNoisy, backgroundColor: 'orange' },
-        { label: 'Prediction', data: resultNoisy.predictions, borderColor: 'green', type: 'line', fill: false }
-    ], `R3 Test | Loss: ${resultNoisy.testLoss.toFixed(4)}`);
+    // renderModelNoisy(resultNoisy);
+    return resultNoisy;
 }
 
-async function trainModelOverfit() {
+function renderModelOverfit(resultOverfit) {
+    renderScatterChart("chartOverfitTrain", [
+        {label: 'Train Noisy', data: currentData.trainNoisy, backgroundColor: 'red'},
+        {label: 'Prediction', data: resultOverfit.predictions, borderColor: 'purple', type: 'line', fill: false}
+    ], `R4 Train | Loss: ${resultOverfit.trainLoss.toFixed(4)}`);
+
+    renderScatterChart("chartOverfitTest", [
+        {label: 'Test Noisy', data: currentData.testNoisy, backgroundColor: 'orange'},
+        {label: 'Prediction', data: resultOverfit.predictions, borderColor: 'purple', type: 'line', fill: false}
+    ], `R4 Test | Loss: ${resultOverfit.testLoss.toFixed(4)}`);
+}
+
+async function createAndTrainModelOverfit() {
     const units = parseInt(document.getElementById("unitsInputOverfit").value);
     const epochs = parseInt(document.getElementById("epochsInputOverfit").value);
     modelOverfit = createModel(units);
     let resultOverfit = await trainAndPredict(modelOverfit, currentData.trainNoisy, currentData.testNoisy, epochs, "Overfit");
-
-    // R4 - Overfit Model
-    renderScatterChart("chartOverfitTrain", [
-        { label: 'Train Noisy', data: currentData.trainNoisy, backgroundColor: 'red' },
-        { label: 'Prediction', data: resultOverfit.predictions, borderColor: 'purple', type: 'line', fill: false }
-    ], `R4 Train | Loss: ${resultOverfit.trainLoss.toFixed(4)}`);
-
-    renderScatterChart("chartOverfitTest", [
-        { label: 'Test Noisy', data: currentData.testNoisy, backgroundColor: 'orange' },
-        { label: 'Prediction', data: resultOverfit.predictions, borderColor: 'purple', type: 'line', fill: false }
-    ], `R4 Test | Loss: ${resultOverfit.testLoss.toFixed(4)}`);
+    return resultOverfit;
 }
 
 function saveModel(name) {
@@ -354,3 +285,5 @@ function saveModel(name) {
 
 document.getElementById("runAll").addEventListener("click",run);
 //run(); // Initialer Lauf
+currentData = generateData();
+run();
