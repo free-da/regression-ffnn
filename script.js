@@ -94,13 +94,7 @@ async function trainAndPredict(model, trainData, testData, epochs, label) {
 
 // Hauptfunktion
 async function run() {
-    let data = null;
-    if (currentData) {
-        data = currentData;
-    } else {
-        alert("Bitte erst Daten erzeugen!");
-        return;
-    }
+    currentData = generateData()
     renderDataPreviewAndScatterChart(currentData,'dataPreview');
     // Clean model
     const resultClean = await createAndTrainModelClean();
@@ -283,7 +277,5 @@ function saveModel(name) {
     model.save(`downloads://model_${name}`);
 }
 
-document.getElementById("runAll").addEventListener("click",run);
-//run(); // Initialer Lauf
-currentData = generateData();
+document.getElementById("generateBtn").addEventListener("click",run);
 run();
