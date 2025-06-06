@@ -128,10 +128,10 @@ function renderScatterChart(canvasId, datasets, title) {
     });
 }
 
-async function loadModelFromDisk() {
-    const model = await tf.loadLayersModel('uploads://mein_model');
-    return model;
-}
+// async function loadModelFromDisk() {
+//     const model = await tf.loadLayersModel('uploads://mein_model');
+//     return model;
+// }
 function renderDataPreviewAndScatterChart(data, elementId) {
     const previewElement = document.getElementById(elementId);
     if (!previewElement) return;
@@ -226,6 +226,7 @@ function renderModelClean(resultClean) {
 async function createAndTrainModelClean() {
     const units = parseInt(document.getElementById("unitsInputClean").value);
     const epochs = parseInt(document.getElementById("epochsInputClean").value);
+    tfvis.visor().open();
     modelClean = createModel(units);
     let resultClean = await trainAndPredict(modelClean, currentData.trainClean, currentData.testClean, epochs, "Unverrauscht");
     // renderModelClean(resultClean);
@@ -247,6 +248,7 @@ function renderModelNoisy(resultNoisy) {
 async function createAndTrainModelNoisy() {
     const units = parseInt(document.getElementById("unitsInputNoisy").value);
     const epochs = parseInt(document.getElementById("epochsInputNoisy").value);
+    tfvis.visor().open();
     modelNoisy = createModel(units);
     let resultNoisy = await trainAndPredict(modelNoisy, currentData.trainNoisy, currentData.testNoisy, epochs, "Mit Rauschen");
     // renderModelNoisy(resultNoisy);
@@ -268,14 +270,29 @@ function renderModelOverfit(resultOverfit) {
 async function createAndTrainModelOverfit() {
     const units = parseInt(document.getElementById("unitsInputOverfit").value);
     const epochs = parseInt(document.getElementById("epochsInputOverfit").value);
+    tfvis.visor().open();
     modelOverfit = createModel(units);
-    let resultOverfit = await trainAndPredict(modelOverfit, currentData.trainNoisy, currentData.testNoisy, epochs, "Overfit");
-    return resultOverfit;
+    return await trainAndPredict(modelOverfit, currentData.trainNoisy, currentData.testNoisy, epochs, "Overfit");
 }
 
-function saveModel(name) {
-    model.save(`downloads://model_${name}`);
-}
+// function saveModel(name) {
+//     model.save(`downloads://model_${name}`);
+// }
+document.getElementById("retrainClean").addEventListener("click", async () => {
+    tfvis.visor().open();
+    const resultClean = await createAndTrainModelClean();
+    renderModelClean(resultClean);
+});
+document.getElementById("retrainNoisy").addEventListener("click", async () => {
+    tfvis.visor().open();
+    const resultNoisy = await createAndTrainModelNoisy()
+    renderModelNoisy(resultNoisy);
+});
+document.getElementById("retrainOverfit").addEventListener("click", async () => {
+    tfvis.visor().open();
+    const resultOverfit = await createAndTrainModelOverfit()
+    renderModelOverfit(resultOverfit);
+});
 
 document.getElementById("generateBtn").addEventListener("click",run);
 run();

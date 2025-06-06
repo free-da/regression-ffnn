@@ -63,17 +63,17 @@
     <h2>R2: Vorhersage y_unverrauscht(x)</h2>
     <div class="grid-x grid-padding-x align-middle">
         <div class="cell small-12 medium-3">
-            <label>Units:
+            <label>Neuronen pro Layer:
                 <input type="number" id="unitsInputClean" value="100" min="1" max="500">
             </label>
         </div>
         <div class="cell small-12 medium-3">
-            <label>Epochs:
+            <label>Anzahl Epochen:
                 <input type="number" id="epochsInputClean" value="150" min="1" max="1000">
             </label>
         </div>
         <div class="cell small-12 medium-6 button-group">
-            <button onclick="createAndTrainModelClean()" class="button primary">Modell neu trainieren</button>
+            <button id="retrainClean" class="button primary">Modell neu trainieren</button>
 <!--            <button onclick="saveModel('clean')" class="button secondary">Modell speichern</button>-->
         </div>
     </div>
@@ -89,17 +89,17 @@
     <h2>R3: Vorhersage y_best(x)</h2>
     <div class="grid-x grid-padding-x align-middle">
         <div class="cell small-12 medium-3">
-            <label>Units:
+            <label>Neuronen pro Layer:
                 <input type="number" id="unitsInputNoisy" value="100" min="1" max="500">
             </label>
         </div>
         <div class="cell small-12 medium-3">
-            <label>Epochs:
+            <label>Anzahl Epochen:
                 <input type="number" id="epochsInputNoisy" value="150" min="1" max="1000">
             </label>
         </div>
         <div class="cell small-12 medium-6 button-group">
-            <button onclick="createAndTrainModelNoisy()" class="button primary">Modell neu trainieren</button>
+            <button id="retrainNoisy" class="button primary">Modell neu trainieren</button>
 <!--            <button onclick="saveModel('noisy')" class="button secondary">Modell speichern</button>-->
         </div>
     </div>
@@ -115,17 +115,17 @@
     <h2>R4: Vorhersage y_overfit(x)</h2>
     <div class="grid-x grid-padding-x align-middle">
         <div class="cell small-12 medium-3">
-            <label>Units:
-                <input type="number" id="unitsInputOverfit" value="500" min="1" max="500">
+            <label>Neuronen pro Layer:
+                <input type="number" id="unitsInputOverfit" value="150" min="1" max="500">
             </label>
         </div>
         <div class="cell small-12 medium-3">
-            <label>Epochs:
-                <input type="number" id="epochsInputOverfit" value="500" min="1" max="1000">
+            <label>Anzahl Epochen:
+                <input type="number" id="epochsInputOverfit" value="400" min="1" max="1000">
             </label>
         </div>
         <div class="cell small-12 medium-6 button-group">
-            <button onclick="createAndTrainModelOverfit()" class="button primary">Modell neu trainieren</button>
+            <button id="retrainOverfit" class="button primary">Modell neu trainieren</button>
 <!--            <button onclick="saveModel('overfit')" class="button secondary">Modell speichern</button>-->
         </div>
     </div>
@@ -137,10 +137,60 @@
             <canvas id="chartOverfitTest"></canvas>
         </div>
     </div>
+<h2>Diskussion</h2>
+<div class="callout secondary">
+    <p>
+        Die Wahl von 100 Neuronen pro Hidden-Layer und die Verwendung von ReLU-Aktivierungen erwies sich als guter
+        Kompromiss zwischen Modellkapazität und Trainingseffizienz. Für das Overfitting-Szenario wurden bewusst
+        viele Epochen (500) verwendet, um Überanpassung sichtbar zu machen. Die Trainingsverluste
+        sind im Vergleich zu den Testverlusten deutlich geringer, was auf Overfitting hindeutet.
+
+        Beim verrauschten Datensatz zeigt sich, dass Modelle mit zu vielen Epochen auch Rauschen lernen,
+        was die Generalisierbarkeit verschlechtert. Eine moderate Anzahl an Epochen (150) mit 100 Neuronen
+        führt zu stabileren Ergebnissen.
+
+        Ich habe gelernt, dass eine zu hohe Modellkapazität bei kleinen Datensätzen problematisch ist
+        und der visuelle Vergleich von Trainings- und Testkurven wichtige Hinweise liefert.
+        Außerdem zeigte sich, dass der Einfluss von Zufall (Initialisierung, Batch-Reihenfolge)
+        nicht vernachlässigt werden darf.
+
+        Die Verwendung von Chart.js und tfjs-vis half dabei, die Trainingsdynamik anschaulich zu beobachten.
+    </p>
+</div>
+
+<h2>Dokumentation</h2>
+    <div class="grid-x grid-padding-x">
+        <div class="cell medium-6">
+            <div class="callout primary">
+                <h4>Technisch</h4>
+                <ul>
+                    <li><strong>Foundation Sites:</strong> Für das responsive Grid-Layout und UI-Komponenten.</li>
+                    <li><strong>TensorFlow.js:</strong> Für das Training und die Ausführung neuronaler Netze direkt im Browser.</li>
+                    <li><strong>Chart.js:</strong> Zur grafischen Darstellung der Trainings- und Testergebnisse.</li>
+                    <li><strong>tfjs-vis:</strong> Ergänzendes Tool zur Visualisierung von TensorFlow-Modellen.</li>
+                </ul>
+                <p>Besonderheit: Die Modelle werden vollständig clientseitig trainiert und können interaktiv gespeichert/geladen werden. Es ist kein Backend erforderlich.</p>
+            </div>
+        </div>
+
+        <div class="cell medium-6">
+            <div class="callout success">
+                <h4>Fachlich</h4>
+                <p>Es wurden drei Modelle zur Regressionsvorhersage implementiert:</p>
+                <ul>
+                    <li><strong>y_unverrauscht(x):</strong> Vorhersage eines sauberen Datensatzes (Benchmark-Modell).</li>
+                    <li><strong>y_best(x):</strong> Bestmöglich generalisiertes Modell auf verrauschtem Datensatz.</li>
+                    <li><strong>y_overfit(x):</strong> Modell mit zu hoher Komplexität, das Overfitting demonstriert.</li>
+                </ul>
+                <p>Die Implementierung folgt einem didaktischen Ansatz zur Veranschaulichung des Overfitting-Problems bei neuronalen Netzen. Alle Daten werden zufällig generiert oder als Datei geladen.</p>
+            </div>
+        </div>
+    </div>
     <div class="row column">
         <hr>
         <ul class="menu"><li class="float-right">© F. Buchner 2025</li></ul>
     </div>
+    <hr>
 </div>
 
 <!-- Foundation JS -->
