@@ -46,7 +46,7 @@
             margin-bottom: 20px;
         }
         #runAll {
-            background:red;
+            background:green;
         }
     </style>
 </head>
@@ -80,7 +80,7 @@
     <input type="number" id="unitsInputClean" value="100" min="1" max="500">
 
     <label for="epochsInputClean">Epochs:</label>
-    <input type="number" id="epochsInputClean" value="50" min="1" max="1000">
+    <input type="number" id="epochsInputClean" value="150" min="1" max="1000">
 
     <button onclick="trainModelClean()">Modell neu trainieren</button>
     <button onclick="saveModel('clean')">Modell speichern</button>
@@ -104,7 +104,7 @@
     <input type="number" id="unitsInputNoisy" value="100" min="1" max="500">
 
     <label for="epochsInputNoisy">Epochs:</label>
-    <input type="number" id="epochsInputNoisy" value="50" min="1" max="1000">
+    <input type="number" id="epochsInputNoisy" value="150" min="1" max="1000">
 
     <button onclick="trainModelNoisy()">Modell neu trainieren</button>
     <button onclick="saveModel('noisy')">Modell speichern</button>
@@ -123,7 +123,7 @@
 
 <div>
     <label for="unitsInputOverfit">Units:</label>
-    <input type="number" id="unitsInputOverfit" value="100" min="1" max="500">
+    <input type="number" id="unitsInputOverfit" value="150" min="1" max="500">
 
     <label for="epochsInputOverfit">Epochs:</label>
     <input type="number" id="epochsInputOverfit" value="500" min="1" max="1000">

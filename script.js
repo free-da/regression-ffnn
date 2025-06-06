@@ -233,6 +233,32 @@ document.getElementById("generateBtn").addEventListener("click", () => {
     currentData = generateData();
     renderDataPreview(currentData,'dataPreview');
     console.log("Beispiel x/y:", currentData.trainNoisy[0]);
+    // R1 - Datensätze
+    renderScatterChart("chartRawClean", [
+        {
+            label: 'Train Clean',
+            data: currentData.trainClean,
+            backgroundColor: 'blue'
+        },
+        {
+            label: 'Test Clean',
+            data: currentData.testClean,
+            backgroundColor: 'lightblue'
+        }
+    ], 'R1: Ohne Rauschen');
+
+    renderScatterChart("chartRawNoisy", [
+        {
+            label: 'Train Noisy',
+            data: currentData.trainNoisy,
+            backgroundColor: 'red'
+        },
+        {
+            label: 'Test Noisy',
+            data: currentData.testNoisy,
+            backgroundColor: 'orange'
+        }
+    ], 'R1: Mit Rauschen');
 });
 
 document.getElementById("downloadDataset").addEventListener("click", () => {
@@ -273,51 +299,51 @@ document.getElementById("uploadDataset").addEventListener("click", () => {
     });
 });
 
-function trainModelClean() {
+async function trainModelClean() {
     const units = parseInt(document.getElementById("unitsInputClean").value);
     const epochs = parseInt(document.getElementById("epochsInputClean").value);
     modelClean = createModel(units);
-    trainAndPredict(modelClean, currentData.trainClean, currentData.testClean, epochs, "Unverrauscht");
+    let resultClean = await trainAndPredict(modelClean, currentData.trainClean, currentData.testClean, epochs, "Unverrauscht");
     renderScatterChart("chartCleanTrain", [
-        { label: 'Train Clean', data: data.trainClean, backgroundColor: 'blue' },
+        { label: 'Train Clean', data: currentData.trainClean, backgroundColor: 'blue' },
         { label: 'Prediction', data: resultClean.predictions, borderColor: 'black', type: 'line', fill: false }
     ], `R2 Train | Loss: ${resultClean.trainLoss.toFixed(4)}`);
-    renderScatterChart("chartBestTest", [
-        { label: 'Test Noisy', data: data.testNoisy, backgroundColor: 'orange' },
-        { label: 'Prediction', data: resultBest.predictions, borderColor: 'green', type: 'line', fill: false }
-    ], `R3 Test | Loss: ${resultBest.testLoss.toFixed(4)}`);
+    renderScatterChart("chartCleanTest", [
+        { label: 'Test Noisy', data: currentData.testNoisy, backgroundColor: 'orange' },
+        { label: 'Prediction', data: resultClean.predictions, borderColor: 'green', type: 'line', fill: false }
+    ], `R3 Test | Loss: ${resultClean.testLoss.toFixed(4)}`);
 }
 
-function trainModelNoisy() {
+async function trainModelNoisy() {
     const units = parseInt(document.getElementById("unitsInputNoisy").value);
     const epochs = parseInt(document.getElementById("epochsInputNoisy").value);
     modelNoisy = createModel(units);
-    trainAndPredict(modelNoisy, currentData.trainNoisy, currentData.testNoisy, epochs, "Mit Rauschen");
+    let resultNoisy = await trainAndPredict(modelNoisy, currentData.trainNoisy, currentData.testNoisy, epochs, "Mit Rauschen");
     renderScatterChart("chartBestTrain", [
-        { label: 'Train Noisy', data: data.trainNoisy, backgroundColor: 'red' },
-        { label: 'Prediction', data: resultBest.predictions, borderColor: 'green', type: 'line', fill: false }
-    ], `R3 Train | Loss: ${resultBest.trainLoss.toFixed(4)}`);
+        { label: 'Train Noisy', data: currentData.trainNoisy, backgroundColor: 'red' },
+        { label: 'Prediction', data: resultNoisy.predictions, borderColor: 'green', type: 'line', fill: false }
+    ], `R3 Train | Loss: ${resultNoisy.trainLoss.toFixed(4)}`);
 
     renderScatterChart("chartBestTest", [
-        { label: 'Test Noisy', data: data.testNoisy, backgroundColor: 'orange' },
-        { label: 'Prediction', data: resultBest.predictions, borderColor: 'green', type: 'line', fill: false }
-    ], `R3 Test | Loss: ${resultBest.testLoss.toFixed(4)}`);
+        { label: 'Test Noisy', data: currentData.testNoisy, backgroundColor: 'orange' },
+        { label: 'Prediction', data: resultNoisy.predictions, borderColor: 'green', type: 'line', fill: false }
+    ], `R3 Test | Loss: ${resultNoisy.testLoss.toFixed(4)}`);
 }
 
-function trainModelOverfit() {
+async function trainModelOverfit() {
     const units = parseInt(document.getElementById("unitsInputOverfit").value);
     const epochs = parseInt(document.getElementById("epochsInputOverfit").value);
     modelOverfit = createModel(units);
-    trainAndPredict(modelOverfit, currentData.trainNoisy, currentData.testNoisy, epochs, "Overfit");
+    let resultOverfit = await trainAndPredict(modelOverfit, currentData.trainNoisy, currentData.testNoisy, epochs, "Overfit");
 
     // R4 - Overfit Model
     renderScatterChart("chartOverfitTrain", [
-        { label: 'Train Noisy', data: data.trainNoisy, backgroundColor: 'red' },
+        { label: 'Train Noisy', data: currentData.trainNoisy, backgroundColor: 'red' },
         { label: 'Prediction', data: resultOverfit.predictions, borderColor: 'purple', type: 'line', fill: false }
     ], `R4 Train | Loss: ${resultOverfit.trainLoss.toFixed(4)}`);
 
     renderScatterChart("chartOverfitTest", [
-        { label: 'Test Noisy', data: data.testNoisy, backgroundColor: 'orange' },
+        { label: 'Test Noisy', data: currentData.testNoisy, backgroundColor: 'orange' },
         { label: 'Prediction', data: resultOverfit.predictions, borderColor: 'purple', type: 'line', fill: false }
     ], `R4 Test | Loss: ${resultOverfit.testLoss.toFixed(4)}`);
 }
