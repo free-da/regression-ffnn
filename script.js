@@ -6,6 +6,9 @@ let currentData = null;
 let modelClean = null;
 let modelNoisy = null;
 let modelOverfit = null;
+let resultClean = null;
+let resultNoisy = null;
+let resultOverfit = null;
 
 // Ziel-Funktion (Ground Truth)
 function targetFunction(x) {
@@ -128,10 +131,6 @@ function renderScatterChart(canvasId, datasets, title) {
     });
 }
 
-// async function loadModelFromDisk() {
-//     const model = await tf.loadLayersModel('uploads://mein_model');
-//     return model;
-// }
 function renderDataPreviewAndScatterChart(data, elementId) {
     const previewElement = document.getElementById(elementId);
     if (!previewElement) return;
@@ -228,8 +227,7 @@ async function createAndTrainModelClean() {
     const epochs = parseInt(document.getElementById("epochsInputClean").value);
     tfvis.visor().open();
     modelClean = createModel(units);
-    let resultClean = await trainAndPredict(modelClean, currentData.trainClean, currentData.testClean, epochs, "Unverrauscht");
-    // renderModelClean(resultClean);
+    resultClean = await trainAndPredict(modelClean, currentData.trainClean, currentData.testClean, epochs, "Unverrauscht");
     return resultClean;
 }
 
@@ -250,8 +248,7 @@ async function createAndTrainModelNoisy() {
     const epochs = parseInt(document.getElementById("epochsInputNoisy").value);
     tfvis.visor().open();
     modelNoisy = createModel(units);
-    let resultNoisy = await trainAndPredict(modelNoisy, currentData.trainNoisy, currentData.testNoisy, epochs, "Mit Rauschen");
-    // renderModelNoisy(resultNoisy);
+    resultNoisy = await trainAndPredict(modelNoisy, currentData.trainNoisy, currentData.testNoisy, epochs, "Mit Rauschen");
     return resultNoisy;
 }
 
@@ -272,12 +269,10 @@ async function createAndTrainModelOverfit() {
     const epochs = parseInt(document.getElementById("epochsInputOverfit").value);
     tfvis.visor().open();
     modelOverfit = createModel(units);
-    return await trainAndPredict(modelOverfit, currentData.trainNoisy, currentData.testNoisy, epochs, "Overfit");
+    resultOverfit = await trainAndPredict(modelOverfit, currentData.trainNoisy, currentData.testNoisy, epochs, "Overfit");
+    return resultOverfit;
 }
 
-// function saveModel(name) {
-//     model.save(`downloads://model_${name}`);
-// }
 document.getElementById("retrainClean").addEventListener("click", async () => {
     tfvis.visor().open();
     const resultClean = await createAndTrainModelClean();
@@ -294,5 +289,126 @@ document.getElementById("retrainOverfit").addEventListener("click", async () => 
     renderModelOverfit(resultOverfit);
 });
 
+function getModelByType(type) {
+    switch (type) {
+        case "clean":
+            return modelClean;
+        case "noisy":
+            return modelNoisy;
+        case "overfit":
+            return modelOverfit;
+        default:
+            throw new Error(`Unbekannter Modelltyp: ${type}`);
+    }
+}
+
+async function loadSavedDataAndModels() {
+    await loadDatasetFromFile();
+
+    modelClean = await loadModelByType('clean');
+    modelNoisy = await loadModelByType('noisy');
+    modelOverfit = await loadModelByType('overfit');
+}
+
+function renderAllFromLoadedData() {
+    renderDataPreviewAndScatterChart(currentData,'dataPreview');
+    // Clean model
+    renderModelClean(resultClean);
+    // Best fit (rauschig, moderate Ep.)
+    renderModelNoisy(resultNoisy);
+    // Overfit (rauschig, zu viele Ep.)
+    renderModelOverfit(resultOverfit);
+}
+
+
+
+async function loadDatasetFromFile() {
+    try {
+        const response = await fetch('dataset.json');
+        if (!response.ok) throw new Error("Datensatz nicht gefunden");
+
+        currentData = await response.json();
+
+        console.log("Datensatz erfolgreich geladen.");
+    } catch (err) {
+        console.error("Fehler beim Laden des Datensatzes:", err);
+    }
+}
+
+async function loadModelByType(type) {
+    try {
+        const model = await tf.loadLayersModel(`model-${type}.json`);
+        console.log(`Modell '${type}' geladen.`);
+        return model;
+    } catch (err) {
+        console.error(`Fehler beim Laden des Modells '${type}':`, err);
+        return null;
+    }
+}
+
+async function saveModel(type) {
+    const model = getModelByType(type);
+    if (!model) {
+        console.error(`Kein Modell vom Typ '${type}' gefunden.`);
+        return;
+    }
+
+    // Modell speichern
+    await model.save(`downloads://model_${type}`);
+
+    // Trainingsdaten holen
+    const result = getResultByType(type);
+
+    if (!result) {
+        console.error(`Keine Trainingsdaten für Modell '${type}' gefunden.`);
+        return;
+    }
+
+    // Exportiere relevante Trainingsdaten in eine Datei
+    const trainingData = {
+        trainLoss: result.trainLoss,
+        testLoss: result.testLoss,
+        trainPredictions: result.trainPredictions,
+        testPredictions: result.testPredictions,
+        xTrain: result.xTrain, // optional
+        xTest: result.xTest,   // optional
+        yTrain: result.yTrain,
+        yTest: result.yTest,
+        units: result.units,
+        epochs: result.epochs
+    };
+
+    const blob = new Blob([JSON.stringify(trainingData)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `training_${type}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function getResultByType(type) {
+    switch (type) {
+        case "clean":
+            return resultClean;
+        case "noisy":
+            return resultNoisy;
+        case "overfit":
+            return resultOverfit;
+        default:
+            console.error(`Unbekannter Modelltyp: ${type}`);
+            return null;
+    }
+}
+
+window.addEventListener('load', async () => {
+    await loadSavedDataAndModels();
+    renderAllFromLoadedData();
+});
+
 document.getElementById("generateBtn").addEventListener("click",run);
-run();
+document.getElementById("downloadClean").addEventListener("click", () => saveModel("clean"));
+document.getElementById("downloadNoisy").addEventListener("click", () => saveModel("noisy"));
+document.getElementById("downloadOverfit").addEventListener("click", () => saveModel("overfit"));
+
+//run();
