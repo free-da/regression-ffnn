@@ -337,7 +337,7 @@ async function loadDatasetFromFile() {
 
 async function loadModelByType(type) {
     try {
-        const model = await tf.loadLayersModel(`model-${type}.json`);
+        const model = await tf.loadLayersModel(`model_${type}.json`);
         console.log(`Modell '${type}' geladen.`);
         return model;
     } catch (err) {
@@ -368,12 +368,7 @@ async function saveModel(type) {
     const trainingData = {
         trainLoss: result.trainLoss,
         testLoss: result.testLoss,
-        trainPredictions: result.trainPredictions,
-        testPredictions: result.testPredictions,
-        xTrain: result.xTrain, // optional
-        xTest: result.xTest,   // optional
-        yTrain: result.yTrain,
-        yTest: result.yTest,
+        predictions: result.predictions,
         units: result.units,
         epochs: result.epochs
     };
@@ -401,8 +396,44 @@ function getResultByType(type) {
     }
 }
 
+async function loadTrainingResult(type) {
+    try {
+        const response = await fetch(`training_${type}.json`);
+        if (!response.ok) {
+            throw new Error(`Fehler beim Laden der Datei training_${type}.json: ${response.statusText}`);
+        }
+        const data = await response.json();
+
+        // Je nachdem, wie deine result-Objekte aufgebaut sind, kannst du hier direkt zuweisen.
+        // Beispiel: resultClean = data;
+        switch(type) {
+            case "clean":
+                resultClean = data;
+                break;
+            case "noisy":
+                resultNoisy = data;
+                break;
+            case "overfit":
+                resultOverfit = data;
+                break;
+        }
+
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+async function loadAllTrainingResults() {
+    await Promise.all([
+        loadTrainingResult("clean"),
+        loadTrainingResult("noisy"),
+        loadTrainingResult("overfit"),
+    ]);
+}
+
 window.addEventListener('load', async () => {
     await loadSavedDataAndModels();
+    await loadAllTrainingResults();
     renderAllFromLoadedData();
 });
 
