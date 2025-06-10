@@ -67,7 +67,7 @@
         </div>
         <div class="cell small-12 medium-3">
             <label>Anzahl Epochen:
-                <input type="number" id="epochsInputClean" value="150" min="1" max="1000">
+                <input type="number" id="epochsInputClean" value="100" min="1" max="1000">
             </label>
         </div>
         <div class="cell small-12 medium-6 button-group">
@@ -93,7 +93,7 @@
         </div>
         <div class="cell small-12 medium-3">
             <label>Anzahl Epochen:
-                <input type="number" id="epochsInputNoisy" value="150" min="1" max="1000">
+                <input type="number" id="epochsInputNoisy" value="200" min="1" max="1000">
             </label>
         </div>
         <div class="cell small-12 medium-6 button-group">
@@ -115,12 +115,12 @@
     <div class="grid-x grid-padding-x align-middle">
         <div class="cell small-12 medium-3">
             <label>Neuronen pro Layer:
-                <input type="number" id="unitsInputOverfit" value="150" min="1" max="500">
+                <input type="number" id="unitsInputOverfit" value="500" min="1" max="500">
             </label>
         </div>
         <div class="cell small-12 medium-3">
             <label>Anzahl Epochen:
-                <input type="number" id="epochsInputOverfit" value="500" min="1" max="1000">
+                <input type="number" id="epochsInputOverfit" value="1000" min="1" max="1000">
             </label>
         </div>
         <div class="cell small-12 medium-6 button-group">
@@ -140,23 +140,20 @@
 <h2>Diskussion</h2>
 <div class="callout secondary">
     <p>
-        Die Wahl von 100 Neuronen pro Hidden-Layer und die Verwendung von ReLU-Aktivierungen erwies sich als guter
-        Kompromiss zwischen Modellkapazität und Trainingseffizienz. Für das Overfitting-Szenario wurden bewusst
-        viele Epochen (500) verwendet, um Überanpassung sichtbar zu machen. Die Trainingsverluste
-        sind im Vergleich zu den Testverlusten deutlich geringer, was auf Overfitting hindeutet.
-
-        Beim verrauschten Datensatz zeigt sich, dass Modelle mit zu vielen Epochen auch Rauschen lernen,
-        was die Generalisierbarkeit verschlechtert. Eine moderate Anzahl an Epochen (150) mit 100 Neuronen
-        führt zu stabileren Ergebnissen.
+        Für das Modell "R2: y_unverrauscht(x)" wurde ein moderater Ansatz von 100 Neuronen pro hidden Layers und 100 Epochen verwendet,
+        um ein gutes Trainingsergebnis zu erzielen. Für "R3: y_best(x)" waren 200 Trainingsläufe notwendig, um einen ähnlichen Loss
+        für Training und Test zu erzielen. Für das Modell "R4: y_overfit(x)" sollte wie der Name ahnen lässt, bewusst ein Overfitting erzeugt
+        werden. Hier wurde das Modell mit 500 Neuronen pro Layers und 1000 Trainingsepochen bewusst überdimensioniert, was zu einem Trainings-Loss
+        von sehr geringen 0.05 und einem Test-Loss von rund 0.15 führte. Hier sieht man, dass das Modell das Rauschen in den Trainingsdaten
+        "mit gelernt" hat. Es hat sich zu sehr auf die Trainingsdaten angepasst, und war dann mit neuen Daten (Test) nicht mehr im Stande,
+        einen vergleichbar geringen Loss zu erzielen.
     </p>
     <p>
         Ich habe gelernt, dass eine zu hohe Modellkapazität bei kleinen Datensätzen problematisch ist
         und der visuelle Vergleich von Trainings- und Testkurven wichtige Hinweise liefert.
         Außerdem zeigte sich, dass der Einfluss von Zufall (Initialisierung, Batch-Reihenfolge)
-        nicht vernachlässigt werden darf.
-    </p>
-    <p>
-        Die Verwendung von Chart.js und tfjs-vis half dabei, die Trainingsdynamik anschaulich zu beobachten.
+        nicht vernachlässigt werden darf. Wenn keine Trainingsdatenpunkte am linken Rand der x-Achse vorhanden waren, führte das unweigerlich zu schlechteren
+        Testergebnissen. Andersherum konnten mit einer ausgewogenen Verteilung deutlich bessere Testergebnisse erzielt werden, wie hier auch gezeigt wird.
     </p>
 </div>
 
@@ -171,7 +168,7 @@
                     <li><strong>Chart.js:</strong> Zur grafischen Darstellung der Trainings- und Testergebnisse.</li>
                     <li><strong>tfjs-vis:</strong> Ergänzendes Tool zur Visualisierung von TensorFlow-Modellen.</li>
                 </ul>
-                <p>Besonderheit: Die Modelle werden vollständig clientseitig trainiert und können interaktiv gespeichert/geladen werden. Es ist kein Backend erforderlich.</p>
+                <p>Besonderheit: Die Modelle werden vollständig clientseitig trainiert und können interaktiv gespeichert werden. Es ist kein Backend erforderlich.</p>
             </div>
         </div>
 

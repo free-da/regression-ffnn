@@ -404,8 +404,6 @@ async function loadTrainingResult(type) {
         }
         const data = await response.json();
 
-        // Je nachdem, wie deine result-Objekte aufgebaut sind, kannst du hier direkt zuweisen.
-        // Beispiel: resultClean = data;
         switch(type) {
             case "clean":
                 resultClean = data;
